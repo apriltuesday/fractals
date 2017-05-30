@@ -1,8 +1,9 @@
 # fractals
 
 ## TODO:
-* how to sample rules / axiom?
-* stochastic rules
-* multiple rules should apply in parallel
 * parameterized elements
+* don't show window
+* cap length / time
+* stochastic rules – non-uniform probabilities?
 * ghostscript dependency...?
+* better things with color, background...

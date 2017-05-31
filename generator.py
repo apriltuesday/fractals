@@ -3,16 +3,19 @@
 import re
 from numpy import random
 
-# TODO: want to encourage height, less turning, less backtracking
-
 variables = ['F', 'X']
 rotations = ['+', '-']
 
 def lsys():
-	return axiom(),	{
-		v : productions()
-		for v in variables
-	}
+	rules = {}
+	for v in variables:
+		while True:
+			prods = list(set(filter(lambda x: len(x) > 0, productions())))
+			if len(prods) > 0:
+				break
+		rules[v] = prods
+
+	return axiom(),	rules
 
 def axiom():
 	return random.choice(variables)
@@ -48,8 +51,7 @@ def clean(s):
 	s = re.sub(r'[+]+', '+', s)
 	s = re.sub(r'[-]+', '-', s)
 	s = re.sub(r'\+\-|\-\+', '', s)
-	s = re.sub(r'\[(\+|\-)\]', '', s)
+	s = re.sub(r'(\+|\-)\]', ']', s)
 	s = re.sub(r'\[\]', '', s)
-	print s
 	return s
 

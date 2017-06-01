@@ -5,6 +5,7 @@ from numpy import random
 
 
 # grammar for generating an l-system
+# slightly more general than what we use in the evolution
 
 variables = ['F']
 rotations = ['+', '-']

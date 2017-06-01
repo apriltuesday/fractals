@@ -1,4 +1,4 @@
-tmp.*
+output/
 
 venv/
 *.pyc

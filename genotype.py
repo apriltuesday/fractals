@@ -8,11 +8,15 @@ from lsys import chunk
 
 
 # genotype is an l-system with axiom and production rules
-class Genotype:
+class Genotype(object):
 
 	def __init__(self, rule):
 		self.axiom = 'F'
 		self.rule = rule
+
+
+	def __eq__(self, other):
+		return self.rule == other.rule
 
 
 	def generate(self, max_iter=5, max_len=500):
@@ -56,7 +60,6 @@ class Genotype:
 
 
 	def random_subtree(self):
-		# return range [i,j)
 		pattern = r'\[[+-F]*\]'
 		left_brackets = list(re.finditer(r'\[', self.rule))
 		if len(left_brackets) == 0:

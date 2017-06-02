@@ -5,44 +5,34 @@ import numpy as np
 import re
 import turtle
 
+MAX_SIZE = 500
 EPSILON = 10.0
 
+def sigmoid(x):
+	return 1.0 / (1.0 + np.exp(-1.0*x))
+
+
 # phenotype is a string that has been generated from an l-system
-class Phenotype:
+class Phenotype(object):
 
 	def __init__(self, code):
 		self.code = code
-		# not currently used...
-		# idea: these parameters are controlled by environment
-		# evolution modifies the rules
-		self.weights = np.array([
-			1.0,
-			0.05,
-			20.0,
-			1.0,
-			0.0,
-			2.0
-		])
+		# TODO figure out where to put these
 		self.step = 5.0
 		self.angle = 22.7
 
+		self.draw()
+		self.features = np.array([
+			self.efficiency(),
+			self.phototropism(),
+			self.symmetry(),
+			self.light(),
+			self.branching()
+		])
 
-	# scores should be non-negative to make sampling easier
-	def score(self):
-		if not hasattr(self, '_score'):
-			self.draw()
-			if len(self._states) == 0:
-				return 0
 
-			self._score = np.dot(self.weights, [
-				self.efficiency(),
-				self.phototropism(),
-				self.symmetry(),
-				self.light(),
-				self.stability(),
-				self.branching()
-			])
-		return self._score
+	def __eq__(self, other):
+		return self.code == other.code
 
 
 	@property
@@ -54,18 +44,24 @@ class Phenotype:
 
 	@property
 	def height(self):
-		return max(0, max(self._states, key=lambda (heading, position): position[1])[1][1])
+		if len(self._states) == 0:
+			return 0.0
+		h = max(self._states, key=lambda (heading, position): position[1])[1][1]
+		return MAX_SIZE * sigmoid(h)
 
 
 	@property
 	def width(self):
+		if len(self._states) == 0:
+			return 0.0
 		left = min(self._states, key=lambda (heading, position): position[0])[1][0]
 		right = max(self._states, key=lambda (heading, position): position[0])[1][0]
-		return abs(right - left)
+		w = abs(right - left)
+		return MAX_SIZE * sigmoid(w)
 
 
 	def efficiency(self):
-		return 1.0 / len(self.code)
+		return 0.0 if len(self.code) == 0 else 1.0 / len(self.code)
 
 
 	def phototropism(self):
@@ -87,6 +83,7 @@ class Phenotype:
 		if len(self._leaves) == 0:
 			return 0
 		# TODO implement this better
+		# also count shading by stem/branch?
 		buckets = []
 		for leaf_ind in self._leaves:
 			leaf_x, leaf_y = self._states[leaf_ind][1]
@@ -98,11 +95,6 @@ class Phenotype:
 			if not contains:
 				buckets.append(leaf_x)
 		return len(buckets)
-
-
-	def stability(self):
-		# i don't know how to do this
-		return 0
 
 
 	# total number of branching points with more than one branch leaving

@@ -19,13 +19,13 @@ class Genotype(object):
 		return self.rule == other.rule
 
 
-	def generate(self, max_iter=5, max_len=500):
+	def generate(self, step, angle, max_iter=5, max_len=500):
 		i = 0
 		current = self.axiom
 		while i < max_iter and len(current) < max_len:
 			i += 1
 			current = re.sub('F', self.rule, current)
-		return Phenotype(current)
+		return Phenotype(current, step, angle)
 
 
 	def mutate(self):

@@ -15,11 +15,10 @@ def sigmoid(x):
 # phenotype is a string that has been generated from an l-system
 class Phenotype(object):
 
-	def __init__(self, code):
+	def __init__(self, code, step, angle):
 		self.code = code
-		# TODO figure out where to put these
-		self.step = 5.0
-		self.angle = 22.7
+		self.step = step
+		self.angle = angle
 
 		self.draw()
 		self.features = np.array([
@@ -70,7 +69,13 @@ class Phenotype(object):
 
 	# ratio of weight on left to weight on right
 	def symmetry(self):
-		xs = [p[0] for (h, p) in self._states]
+		# indices into state array corresponding to nodes
+		pattern = r'F'
+		nodes = [self._states[match.start()] for match in re.finditer(pattern, self.code)]
+		if len(nodes) == 0:
+			return 0
+
+		xs = [p[0] for (h, p) in nodes]
 		left = sum([abs(x) for x in xs if x < 0])
 		right = sum([x for x in xs if x > 0])
 		if left == 0 or right == 0:
@@ -80,12 +85,16 @@ class Phenotype(object):
 
 	# number of leaves (end segments) not shaded by other leaves
 	def light(self):
-		if len(self._leaves) == 0:
+		# indices into state array corresponding to leaves
+		pattern = r'F[+-F]*\]'
+		leaves = [match.end() for match in re.finditer(pattern, self.code)]
+		if len(leaves) == 0:
 			return 0
+
 		# TODO implement this better
 		# also count shading by stem/branch?
 		buckets = []
-		for leaf_ind in self._leaves:
+		for leaf_ind in leaves:
 			leaf_x, leaf_y = self._states[leaf_ind][1]
 			contains = False
 			for other_x in buckets:
@@ -120,8 +129,6 @@ class Phenotype(object):
 
 		# stores position and heading of turtle at each step
 		self._states = []
-		# indices into state array corresponding to leaves
-		self._leaves = []
 
 		# draw
 		for c in self.code:
@@ -139,8 +146,6 @@ class Phenotype(object):
 			elif c == '[':
 				stack.append((t.heading(), t.pos()))
 			elif c == ']':
-				# we assume these are leaves
-				self._leaves.append(len(self._states)-1)
 				t.penup()
 				heading, position = stack.pop()
 				t.setheading(heading)

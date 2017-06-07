@@ -1,7 +1,6 @@
 # fractals
 
 ## TODO:
-* multiple variables for evolution (F & X)
 * parameterized elements (necessary for some more realistic models)
 * stochastic rules – including in evolution
 * context-sensitive

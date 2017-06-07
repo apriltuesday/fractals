@@ -3,11 +3,9 @@
 
 from numpy import random
 
-
 # grammar for generating an l-system
-# slightly more general than what we use in the evolution
 
-variables = ['F']
+variables = ['F', 'X']
 rotations = ['+', '-']
 
 def lsys():
@@ -20,10 +18,11 @@ def axiom():
 	return random.choice(variables)
 
 def productions():
-	n = random.rand()
-	if n < 0.5:
-		return [chunk()]
-	return [chunk()] + productions()
+	return chunk()
+	#n = random.rand()
+	#if n < 0.5:
+	#	return [chunk()]
+	#return [chunk()] + productions()
 
 def chunk():
 	n = random.rand()

@@ -5,9 +5,6 @@ import numpy as np
 import re
 import turtle
 
-MAX_SIZE = 500
-EPSILON = 10.0
-
 def sigmoid(x):
 	return 1.0 / (1.0 + np.exp(-1.0*x))
 
@@ -15,10 +12,9 @@ def sigmoid(x):
 # phenotype is a string that has been generated from an l-system
 class Phenotype(object):
 
-	def __init__(self, code, step, angle):
+	def __init__(self, code, env):
 		self.code = code
-		self.step = step
-		self.angle = angle
+		self.env = env
 
 		self.draw()
 		self.features = np.array([
@@ -46,7 +42,7 @@ class Phenotype(object):
 		if len(self._states) == 0:
 			return 0.0
 		h = max(self._states, key=lambda (heading, position): position[1])[1][1]
-		return MAX_SIZE * sigmoid(h)
+		return self.env.max_height * sigmoid(h)
 
 
 	@property
@@ -56,7 +52,7 @@ class Phenotype(object):
 		left = min(self._states, key=lambda (heading, position): position[0])[1][0]
 		right = max(self._states, key=lambda (heading, position): position[0])[1][0]
 		w = abs(right - left)
-		return MAX_SIZE * sigmoid(w)
+		return self.env.max_width * sigmoid(w)
 
 
 	def efficiency(self):
@@ -87,7 +83,7 @@ class Phenotype(object):
 	def light(self):
 		# indices into state array corresponding to leaves
 		pattern = r'F[+-F]*\]'
-		leaves = [match.end() for match in re.finditer(pattern, self.code)]
+		leaves = [match.end()-1 for match in re.finditer(pattern, self.code)]
 		if len(leaves) == 0:
 			return 0
 
@@ -98,7 +94,7 @@ class Phenotype(object):
 			leaf_x, leaf_y = self._states[leaf_ind][1]
 			contains = False
 			for other_x in buckets:
-				if abs(other_x - leaf_x) < EPSILON:
+				if abs(other_x - leaf_x) < self.env.leaf_size:
 					contains = True
 					break
 			if not contains:
@@ -124,7 +120,7 @@ class Phenotype(object):
 		t.speed(0)
 		t.penup()
 		t.left(90)
-		t.setpos(0, -200)
+		t.setpos(0, -250)
 		t.pencolor('#367132')
 
 		# stores position and heading of turtle at each step
@@ -134,15 +130,15 @@ class Phenotype(object):
 		for c in self.code:
 			self._states.append((t.heading(), t.pos()))
 			if c == 'F':
-				t.forward(self.step)
+				t.forward(self.env.step)
 			elif c == 'f': #not currently used
 				t.penup()
-				t.forward(self.step)
+				t.forward(self.env.step)
 				t.pendown()
 			elif c == '+':
-				t.left(self.angle)
+				t.left(self.env.angle)
 			elif c == '-':
-				t.right(self.angle)
+				t.right(self.env.angle)
 			elif c == '[':
 				stack.append((t.heading(), t.pos()))
 			elif c == ']':

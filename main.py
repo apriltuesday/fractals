@@ -14,34 +14,30 @@ def softmax(x):
 	return e_x / np.sum(e_x)
 
 
-ENVIRONMENT = {
-	'step': 5.0,
-	'angle': 22.7,
-	'weights': np.array([
-		0.05,
-		0.05,
-		0.3,
-		0.3,
-		0.3
-	]),
-	'elitism_rate': 0.2,
-	'mutation_rate': 0.2,
-}
+class Environment(object):
+	def __init__(self, step, angle, weights, elitism_rate, mutation_rate,
+				 pop_size, max_height, max_width, leaf_size):
+		self.step = step
+		self.angle = angle
+		self.weights = weights
+		self.elitism_rate = elitism_rate
+		self.mutation_rate = mutation_rate
+		self.pop_size = pop_size
+		self.max_height = max_height
+		self.max_width = max_width
+		self.leaf_size = leaf_size
 
 
 def get_scores(population, env):
-	features = np.array([g.generate(env['step'], env['angle']).features for g in population])
+	features = np.array([g.generate(env).features for g in population])
 	features = np.apply_along_axis(softmax, 0, features)
-	return np.dot(features, env['weights']).tolist()
+	return np.dot(features, env.weights).tolist()
 
 
-def evolve(env, generations=10, pop_size=500):
-	elitism_rate = env['elitism_rate']
-	mutation_rate = env['mutation_rate']
-
+def evolve(env, generations=10):
 	# random starting population
-	population = [Genotype(lsys()[1]['F'][0]) for j in range(pop_size)]
-	n = int(elitism_rate * pop_size)
+	population = [Genotype(lsys()) for j in range(env.pop_size)]
+	n = int(env.elitism_rate * env.pop_size)
 
 	# rank descending by fitness score
 	scores = get_scores(population, env)
@@ -51,9 +47,9 @@ def evolve(env, generations=10, pop_size=500):
 	for i in range(generations):
 		print 'generation', i
 		print 'best score:', scores[0]
-		print 'best rule:', population[0].rule
+		print 'best rule:', population[0].rules
 		print '============='
-		save_image(population[0].generate(env['step'], env['angle']), filename='gen_{:02d}'.format(i))
+		save_image(population[0].generate(env), filename='gen_{:02d}'.format(i))
 
 		# bottom n get tossed, top n go through unchanged
 		population = population[:-n]
@@ -62,10 +58,10 @@ def evolve(env, generations=10, pop_size=500):
 		new_pop = population[:n]
 
 		# rest are product of crossover + mutation
-		for j in range(n, pop_size):
+		for j in range(n, env.pop_size):
 			parents = np.random.choice(population, 2, p=probs)
 			new_g = parents[0].crossover(parents[1])
-			new_pop.append(new_g.mutate() if np.random.rand() < mutation_rate else new_g)
+			new_pop.append(new_g.mutate() if np.random.rand() < env.mutation_rate else new_g)
 
 		scores = get_scores(new_pop, env)
 		population = sorted(new_pop, key=lambda g: scores[new_pop.index(g)], reverse=True)
@@ -82,14 +78,26 @@ def save_image(phenotype, filename='tmp'):
 	subprocess.call(['convert',
 		ps_file,
 		'-gravity', 'Center',
-		'-crop', '512x512+0+0',
+		'-crop', '600x600+0+0',
 		png_file
 	])
 	subprocess.call(['rm', '-r', ps_file])
 
 
 if __name__ == '__main__':
-	population = evolve(ENVIRONMENT)
-	print 'final best rule:', population[0].rule
+	env = Environment(5.0, 22.7,
+		np.array([
+			0.1,
+			0.1,
+			0.2,
+			0.3,
+			0.3,
+		]),
+		0.25, 0.2, 400,
+		300.0, 500.0, 10.0)
+	population = evolve(env)
+	print 'final best rule:', population[0].rules
 	for g in population[:10]:
-		save_image(g.generate(ENVIRONMENT['step'], ENVIRONMENT['angle']), filename=g.rule)
+		save_image(g.generate(env),
+			filename='{},{}'.format(g.rules['F'], g.rules['X']))
+

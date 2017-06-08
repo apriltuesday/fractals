@@ -4,7 +4,6 @@
 import time
 import tweepy
 
-
 # twitter auth
 # consumer_key = os.environ['CONSUMER_KEY']
 # consumer_secret = os.environ['CONSUMER_SECRET']
@@ -19,24 +18,23 @@ BOT_NAME = 'FractalBot'
 
 
 class FractalBot(tweepy.StreamListener):
-
-	def random_post(self):
-		try:
-			#api.update_with_media(output_file, message)
-			print 'done!'
-		except Exception as e:
-			print 'couldn\'t create status :', e
+    def random_post(self):
+        try:
+            # api.update_with_media(output_file, message)
+            print 'done!'
+        except Exception as e:
+            print 'couldn\'t create status :', e
 
 
 def main():
-	bot = FractalBot()
-	print 'up and running!'
+    bot = FractalBot()
+    print 'up and running!'
 
-	# post randomly every 4 hours
-	while True:
-		bot.random_post()
-		time.sleep(14400)
+    # post randomly every 4 hours
+    while True:
+        bot.random_post()
+        time.sleep(14400)
 
 
 if __name__ == '__main__':
-	main()
+    main()

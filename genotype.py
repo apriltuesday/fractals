@@ -20,7 +20,6 @@ class Genotype(object):
             i += 1
             for lhs, rhs in self.rules.items():
                 current = re.sub(lhs, rhs, current)
-        current = re.sub('X', 'F', current)
         return Phenotype(current, env)
 
     def mutate(self):

@@ -121,10 +121,8 @@ class Phenotype(object):
             self._states.append((t.heading(), t.pos()))
             if c == 'F':
                 t.forward(self.env.step)
-            elif c == 'f':  # not currently used
-                t.penup()
-                t.forward(self.env.step)
-                t.pendown()
+            elif c == 'X':
+                continue
             elif c == '+':
                 t.left(self.env.angle)
             elif c == '-':

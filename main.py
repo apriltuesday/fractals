@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
 import subprocess
 import numpy as np
 
@@ -21,7 +20,7 @@ class Environment(object):
         self.angle = angle
         self.weights = weights
         self.elitism_rate = elitism_rate
-        self.mutation_rate = mutation_rate
+        self.mutation_rate = mutation_rate  # TODO mutation rate should be per codon
         self.pop_size = pop_size
         self.max_height = max_height
         self.max_width = max_width
@@ -85,16 +84,16 @@ def save_image(phenotype, filename='tmp'):
 
 
 if __name__ == '__main__':
-    env = Environment(5.0, 22.7,
-                      np.array([
+    env = Environment(5.0, 22.7,  # step and angle
+                      np.array([  # scoring weights
                           0.1,
                           0.1,
                           0.2,
                           0.3,
                           0.3,
                       ]),
-                      0.25, 0.2, 400,
-                      300.0, 500.0, 10.0)
+                      0.25, 0.2, 400,  # pop rates and size
+                      300.0, 500.0, 10.0)  # size and leaf
     population = evolve(env)
     print 'final best rule:', population[0].rules
     for g in population[:10]:

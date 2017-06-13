@@ -5,8 +5,6 @@
     <title>PLERNTS</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="jquery-3.2.1.min.js"></script>
-    <script src="/pico.js"></script>
-    <script src="/main.js"></script>
 </head>
 <body>
 
@@ -69,9 +67,12 @@ function lrender(origin, sequence, handler) {
   return state
 }
 
-var main = pico.importModule('main')
-var plants = main.plants()
-lrender({ x:300, y:500 }, plants[0].split(''), plant(5.0, 22.7))
+// TODO draw multiple plants in different locations
+// TODO running only one generation?
+$.get("http://localhost:5000/plants", function(data, status){
+        var plants = data['results']
+        lrender({ x:300, y:500 }, plants[0].split(''), plant(5.0, 22.7))
+    });
 
 </script>
 </body>

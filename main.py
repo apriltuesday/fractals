@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import subprocess
+
 import numpy as np
+from flask import Flask, jsonify
 
-from lsys import lsys
+from crossdomain import crossdomain
 from genotype import Genotype
+from lsys import lsys
 
-import pico
+app = Flask(__name__)
 
 
 def softmax(x):
@@ -37,7 +40,7 @@ ENV = Environment(5.0, 22.7,  # step and angle
                     0.3,
                     0.3,
                   ]),
-                  0.25, 0.2, 100,  # pop rates and size
+                  0.25, 0.2, 400,  # pop rates and size
                   300.0, 500.0, 10.0)  # size and leaf
 
 
@@ -47,7 +50,7 @@ def get_scores(population, env):
     return np.dot(features, env.weights).tolist()
 
 
-def evolve(env=ENV, generations=2):
+def evolve(env=ENV, generations=10):
     # random starting population
     population = [Genotype(lsys()) for j in range(env.pop_size)]
     n = int(env.elitism_rate * env.pop_size)
@@ -80,13 +83,14 @@ def evolve(env=ENV, generations=2):
         population = sorted(new_pop, key=lambda g: scores[new_pop.index(g)], reverse=True)
         scores = sorted(scores, reverse=True)
 
-    return population
+        return population
 
 
-@pico.expose()
-def plants(env=ENV, generations=2):
+@app.route("/plants")
+@crossdomain(origin="*")
+def plants(env=ENV, generations=10):
     population = evolve(env, generations)
-    return [g.generate(env).code for g in population]
+    return jsonify({'results': [g.generate(env).code for g in population]})
 
 
 def save_image(phenotype, filename='tmp'):
@@ -102,9 +106,7 @@ def save_image(phenotype, filename='tmp'):
                      ])
     subprocess.call(['rm', '-r', ps_file])
 
-
-app = pico.PicoApp()
-app.register_module(__name__)
+app.run()
 
 # if __name__ == '__main__':
 #     population = evolve(env)

@@ -7,6 +7,8 @@ import numpy as np
 from lsys import lsys
 from genotype import Genotype
 
+import pico
+
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
@@ -27,13 +29,25 @@ class Environment(object):
         self.leaf_size = leaf_size
 
 
+ENV = Environment(5.0, 22.7,  # step and angle
+                  np.array([  # scoring weights
+                    0.1,
+                    0.1,
+                    0.2,
+                    0.3,
+                    0.3,
+                  ]),
+                  0.25, 0.2, 100,  # pop rates and size
+                  300.0, 500.0, 10.0)  # size and leaf
+
+
 def get_scores(population, env):
     features = np.array([g.generate(env).features for g in population])
     features = np.apply_along_axis(softmax, 0, features)
     return np.dot(features, env.weights).tolist()
 
 
-def evolve(env, generations=10):
+def evolve(env=ENV, generations=2):
     # random starting population
     population = [Genotype(lsys()) for j in range(env.pop_size)]
     n = int(env.elitism_rate * env.pop_size)
@@ -69,6 +83,12 @@ def evolve(env, generations=10):
     return population
 
 
+@pico.expose()
+def plants(env=ENV, generations=2):
+    population = evolve(env, generations)
+    return [g.generate(env).code for g in population]
+
+
 def save_image(phenotype, filename='tmp'):
     cv = phenotype.image
     ps_file = 'output/{}.ps'.format(filename)
@@ -83,19 +103,12 @@ def save_image(phenotype, filename='tmp'):
     subprocess.call(['rm', '-r', ps_file])
 
 
-if __name__ == '__main__':
-    env = Environment(5.0, 22.7,  # step and angle
-                      np.array([  # scoring weights
-                          0.1,
-                          0.1,
-                          0.2,
-                          0.3,
-                          0.3,
-                      ]),
-                      0.25, 0.2, 400,  # pop rates and size
-                      300.0, 500.0, 10.0)  # size and leaf
-    population = evolve(env)
-    print 'final best rule:', population[0].rules
-    for g in population[:10]:
-        save_image(g.generate(env),
-                   filename='{},{}'.format(g.rules['F'], g.rules['X']))
+app = pico.PicoApp()
+app.register_module(__name__)
+
+# if __name__ == '__main__':
+#     population = evolve(env)
+#     print 'final best rule:', population[0].rules
+#     for g in population[:10]:
+#         save_image(g.generate(env),
+#                    filename='{},{}'.format(g.rules['F'], g.rules['X']))

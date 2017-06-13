@@ -99,7 +99,7 @@ class Phenotype(object):
         matches = [match.group(1) for match in re.finditer(pattern, self.code)]
         return len(matches)
 
-    def draw(self):
+    def draw(self):  # TODO change this, no turtle here just compute state
         # init turtle
         t = turtle.Turtle()
         s = turtle.Screen()

@@ -50,6 +50,7 @@ def get_scores(population, env):
     return np.dot(features, env.weights).tolist()
 
 
+# TODO yield population on each generation -> can we stream to the FE?
 def evolve(env=ENV, generations=10):
     # random starting population
     population = [Genotype(lsys()) for j in range(env.pop_size)]
@@ -65,7 +66,7 @@ def evolve(env=ENV, generations=10):
         print 'best score:', scores[0]
         print 'best rule:', population[0].rules
         print '============='
-        save_image(population[0].generate(env), filename='gen_{:02d}'.format(i))
+        # save_image(population[0].generate(env), filename='gen_{:02d}'.format(i))
 
         # bottom n get tossed, top n go through unchanged
         population = population[:-n]
@@ -83,7 +84,7 @@ def evolve(env=ENV, generations=10):
         population = sorted(new_pop, key=lambda g: scores[new_pop.index(g)], reverse=True)
         scores = sorted(scores, reverse=True)
 
-        return population
+    return population
 
 
 @app.route("/plants")

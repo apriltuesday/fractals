@@ -45,33 +45,40 @@ function plant(length, theta) {
 }
 
 function linit(x, y) {
-  var state = { x:x, y:y, theta:-Math.PI/2 }
+  var state = { x:x, y:y, theta:Math.PI/2 }
   var svg = [ "M" + x + "," + y ]
   return { state:state, svg:svg, stack:[] }
 }
 
-function ldraw(state, target) {
+function ldraw(state, color, target) {
   if (typeof target === 'undefined') target = "svg"
   d3.select(target)
     .append("path")
-    .attr("stroke","green")
-    .attr("stroke-width",1)
+    .attr("stroke", color)
+    .attr("stroke-width",1.5)
     .attr("fill","none")
     .attr("d", state.svg.join(" "))
 }
 
-function lrender(origin, sequence, handler) {
+function lrender(origin, color, sequence, handler) {
   var state = linit(origin.x, origin.y)
   state = sequence.reduce(handler, state)
-  ldraw(state)
+  ldraw(state, color)
   return state
 }
 
-// TODO draw multiple plants in different locations
-// TODO running only one generation?
+var step = 5.0
+var angle = 0.396
+var width = height = 600
+var colors = ["#367132", "#57A71C", "#71C70C", "#ABBE55", "#B1DE75", "50F71E", "#57A515", "#7AB005", "#5ECC05"]
+
 $.get("http://localhost:5000/plants", function(data, status){
-        var plants = data['results']
-        lrender({ x:300, y:500 }, plants[0].split(''), plant(5.0, 22.7))
+        var plants = data['results'].slice(0, 20)
+        plants.forEach(function(p) {
+            var pos = Math.random() * (width - 100) + 100
+            var col = colors[Math.floor(Math.random() * colors.length)]
+            lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(step, angle))
+        })
     });
 
 </script>

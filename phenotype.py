@@ -3,7 +3,6 @@
 
 import numpy as np
 import re
-import turtle
 
 
 def sigmoid(x):
@@ -15,6 +14,8 @@ class Phenotype(object):
     def __init__(self, code, env):
         self.code = code
         self.env = env
+        # stores position and heading of turtle at each step
+        self._states = []
 
         self.draw()
         self.features = np.array([
@@ -27,12 +28,6 @@ class Phenotype(object):
 
     def __eq__(self, other):
         return self.code == other.code
-
-    @property
-    def image(self):
-        if not hasattr(self, '_image'):
-            self.draw()
-        return self._image
 
     @property
     def height(self):
@@ -99,43 +94,30 @@ class Phenotype(object):
         matches = [match.group(1) for match in re.finditer(pattern, self.code)]
         return len(matches)
 
-    def draw(self):  # TODO change this, no turtle here just compute state
-        # init turtle
-        t = turtle.Turtle()
-        s = turtle.Screen()
+    def draw(self):
+        state = (90, (0, 0))
+        self._states.append(state)
         stack = []
-        t.getscreen().clear()
-        s.tracer(500, 0)
-        t.hideturtle()
-        t.speed(0)
-        t.penup()
-        t.left(90)
-        t.setpos(0, -250)
-        t.pencolor('#367132')
 
-        # stores position and heading of turtle at each step
-        self._states = []
-
-        # draw
         for c in self.code:
-            self._states.append((t.heading(), t.pos()))
+            self._states.append(state)
             if c == 'F':
-                t.forward(self.env.step)
+                x, y = state[1]
+                x -= self.env.step * np.cos(self.env.angle)
+                y -= self.env.step * np.sin(self.env.angle)
+                state = (state[0], (x, y))
             elif c == 'X':
                 continue
             elif c == '+':
-                t.left(self.env.angle)
+                h = state[0] + self.env.angle
+                state = (h, state[1])
             elif c == '-':
-                t.right(self.env.angle)
+                h = state[0] - self.env.angle
+                state = (h, state[1])
             elif c == '[':
-                stack.append((t.heading(), t.pos()))
+                stack.append(state)
             elif c == ']':
-                t.penup()
-                heading, position = stack.pop()
-                t.setheading(heading)
-                t.setpos(position)
-                t.pendown()
+                state = stack.pop()
             else:
                 print 'not supported:', c
 
-        self._image = s.getcanvas()

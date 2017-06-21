@@ -4,7 +4,7 @@
 import subprocess
 
 import numpy as np
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 from crossdomain import crossdomain
 from genotype import Genotype
@@ -18,30 +18,29 @@ def softmax(x):
     return e_x / np.sum(e_x)
 
 
-class Environment(object):
-    def __init__(self, step, angle, weights, elitism_rate, mutation_rate,
-                 pop_size, max_height, max_width, leaf_size):
-        self.step = step
-        self.angle = angle
-        self.weights = weights
-        self.elitism_rate = elitism_rate
-        self.mutation_rate = mutation_rate  # TODO mutation rate should be per codon
-        self.pop_size = pop_size
-        self.max_height = max_height
-        self.max_width = max_width
-        self.leaf_size = leaf_size
+class Environment(object):  # TODO compute params from input here
+    def __init__(self, input):
+        self.step = 5.0
+        self.angle = 0.396
+        self.weights = np.array([0.1, 0.1, 0.2, 0.3, 0.3])
+        self.elitism_rate = 0.25
+        self.mutation_rate = 0.2  # TODO mutation rate should be per codon
+        self.pop_size = 400
+        self.max_height = 300.0
+        self.max_width = 500.0
+        self.leaf_size = 10.0
 
 
-ENV = Environment(5.0, 22.7,  # step and angle
-                  np.array([  # scoring weights
-                    0.1,
-                    0.1,
-                    0.2,
-                    0.3,
-                    0.3,
-                  ]),
-                  0.25, 0.2, 400,  # pop rates and size
-                  300.0, 500.0, 10.0)  # size and leaf
+# ENV = Environment(5.0, 0.396,  # step and angle
+#                   np.array([  # scoring weights
+#                     0.1,
+#                     0.1,
+#                     0.2,
+#                     0.3,
+#                     0.3,
+#                   ]),
+#                   0.25, 0.2, 400,  # pop rates and size
+#                   300.0, 500.0, 10.0)  # size and leaf
 
 
 def get_scores(population, env):
@@ -51,7 +50,7 @@ def get_scores(population, env):
 
 
 # TODO yield population on each generation -> can we stream to the FE?
-def evolve(env=ENV, generations=10):
+def evolve(env, generations=10):
     # random starting population
     population = [Genotype(lsys()) for j in range(env.pop_size)]
     n = int(env.elitism_rate * env.pop_size)
@@ -87,10 +86,13 @@ def evolve(env=ENV, generations=10):
     return population
 
 
-@app.route("/plants")
-@crossdomain(origin="*")
-def plants(env=ENV, generations=10):
-    population = evolve(env, generations)
+@app.route("/plants", methods=["POST", "OPTIONS"])
+@crossdomain(origin="*", headers="Content-Type")
+def plants():
+    input = request.get_json()
+    gens = input['generations']
+    env = Environment(input)
+    population = evolve(env, gens)
     return jsonify({'results': [g.generate(env).code for g in population]})
 
 

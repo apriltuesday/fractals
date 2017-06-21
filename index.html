@@ -1,85 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>PLERNTS</title>
-    <script src="https://d3js.org/d3.v4.min.js"></script>
-    <script src="jquery-3.2.1.min.js"></script>
+  <meta charset="UTF-8">
+  <title>PLERNTS</title>
+  <!-- d3 -->
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- jquery ui -->
+  <link href="jquery-ui-1.12.1/jquery-ui.css" rel="stylesheet">
+  <script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+  <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 </head>
 <body>
 
-<svg width="600" height="600" font-family="sans-serif" font-size="10" text-anchor="middle"></svg>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <h2>PLERNTS</h2>
+        <form class="config">
+          <label for="gens">Generations</label>
+          <input id="gens"><br>
 
-<script>
+          <label for="light">Light</label>
+          <div id="light"></div><br>
+
+          <label for="nutrients">Nutrients</label>
+          <div id="nutrients"></div><br>
+
+          <label for="temperature">Temperature</label>
+          <div id="temperature"></div><br>
+
+          <label for="rainfall">Rainfall</label>
+          <div id="rainfall"></div><br>
+
+          <label for="wind">Wind</label>
+          <div id="wind"></div><br>
+
+          <label for="altitude">Altitude</label>
+          <div id="altitude"></div><br>
+
+          <input id="submit" type="submit" value="GO">
+        </form>
+      </div>
+      <div class="col-md-8">
+        <svg width="600" height="600" font-family="sans-serif" font-size="10" text-anchor="middle"></svg>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+// Input form
+var generations = $( "#gens" ).spinner({
+  min: 1,
+  max: 100,
+  step: 1
+});
+generations.spinner("value", 5);
+var light = $( "#light" ).slider({
+	range: false,
+	min: 0,
+	max: 1,
+	step: 0.01,
+	value: 0.25
+});
+$( "#submit" ).button();
+
+
+// Drawing
 
 function plant(length, theta) {
   if (typeof theta === 'undefined') theta = -25 * Math.PI / 180
-  return function(acc, code) {
-    switch (code) {
-    case 'X': break
-    case 'F':
-      acc.state.x -= length * Math.cos(acc.state.theta)
-      acc.state.y -= length * Math.sin(acc.state.theta)
-      acc.svg.push("L" + acc.state.x + "," + acc.state.y)
-      break
+    return function(acc, code) {
+      switch (code) {
+        case 'X': break
+        case 'F':
+        acc.state.x -= length * Math.cos(acc.state.theta)
+        acc.state.y -= length * Math.sin(acc.state.theta)
+        acc.svg.push("L" + acc.state.x + "," + acc.state.y)
+        break
 
-    case '+':
-      acc.state.theta += theta
-      break
+        case '+':
+        acc.state.theta += theta
+        break
 
-    case '-':
-      acc.state.theta -= theta
-      break
+        case '-':
+        acc.state.theta -= theta
+        break
 
-    case '[':
-      acc.stack.push($.extend({}, acc.state))
-      break
+        case '[':
+        acc.stack.push($.extend({}, acc.state))
+        break
 
-    case ']':
-      acc.state = acc.stack.pop()
-      acc.svg.push("M" + acc.state.x + "," + acc.state.y)
-      break
+        case ']':
+        acc.state = acc.stack.pop()
+        acc.svg.push("M" + acc.state.x + "," + acc.state.y)
+        break
+      }
+      return acc
     }
-    return acc
   }
-}
 
-function linit(x, y) {
-  var state = { x:x, y:y, theta:Math.PI/2 }
-  var svg = [ "M" + x + "," + y ]
-  return { state:state, svg:svg, stack:[] }
-}
+  function linit(x, y) {
+    var state = { x:x, y:y, theta:Math.PI/2 }
+    var svg = [ "M" + x + "," + y ]
+    return { state:state, svg:svg, stack:[] }
+  }
 
-function ldraw(state, color, target) {
-  if (typeof target === 'undefined') target = "svg"
-  d3.select(target)
+  function ldraw(state, color, target) {
+    if (typeof target === 'undefined') target = "svg"
+      d3.select(target)
     .append("path")
     .attr("stroke", color)
     .attr("stroke-width",1.5)
     .attr("fill","none")
     .attr("d", state.svg.join(" "))
-}
+  }
 
-function lrender(origin, color, sequence, handler) {
-  var state = linit(origin.x, origin.y)
-  state = sequence.reduce(handler, state)
-  ldraw(state, color)
-  return state
-}
+  function lrender(origin, color, sequence, handler) {
+    var state = linit(origin.x, origin.y)
+    state = sequence.reduce(handler, state)
+    ldraw(state, color)
+    return state
+  }
 
-var step = 5.0
-var angle = 0.396
-var width = height = 600
-var colors = ["#367132", "#57A71C", "#71C70C", "#ABBE55", "#B1DE75", "50F71E", "#57A515", "#7AB005", "#5ECC05"]
+  // Compute plants
 
-$.get("http://localhost:5000/plants", function(data, status){
-        var plants = data['results'].slice(0, 20)
-        plants.forEach(function(p) {
-            var pos = Math.random() * (width - 100) + 100
-            var col = colors[Math.floor(Math.random() * colors.length)]
-            lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(step, angle))
-        })
-    });
+  var step = 5.0
+  var angle = 0.396
+  var width = height = 600
+  var colors = ["#367132", "#57A71C", "#71C70C", "#ABBE55", "#B1DE75", "50F71E", "#57A515", "#7AB005", "#5ECC05"]
+  var url = 'http://localhost:5000/plants'
+
+  function callback(data) {
+    console.log(data);
+    data['results'].slice(0, 100).forEach(function(p) {
+      var pos = Math.random() * (width - 100) + 100
+      var col = colors[Math.floor(Math.random() * colors.length)]
+      lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(step, angle))
+    })
+  }
+    
+
+  $('.config').on('submit', function () {
+    // clear canvas
+    d3.select("svg").selectAll("*").remove()
+
+    var data = {
+      generations: generations.spinner("value"),
+      light: light.slider("value")
+    }
+    console.log(data)
+
+    // construct an HTTP request
+    var request = new XMLHttpRequest();
+    request.open("POST", url, true);
+    request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+    request.onreadystatechange = function() {
+        if (request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+            callback(JSON.parse(request.response));
+        }
+    };
+    request.send(JSON.stringify(data));
+
+    return false; //prevent default form submit
+  });
 
 </script>
 </body>

@@ -1,4 +1,4 @@
-# fractals
+# plernts
 
 ## TODO:
 * stochastic rules – including in evolution (sample a few phenotypes? expected values?)

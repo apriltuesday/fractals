@@ -33,15 +33,15 @@ class Phenotype(object):
     def height(self):
         if len(self._states) == 0:
             return 0.0
-        h = max(self._states, key=lambda (heading, position): position[1])[1][1]
+        h = max(self._states, key=lambda state: state[1][1])[1][1]
         return self.env.max_height * sigmoid(h)
 
     @property
     def width(self):
         if len(self._states) == 0:
             return 0.0
-        left = min(self._states, key=lambda (heading, position): position[0])[1][0]
-        right = max(self._states, key=lambda (heading, position): position[0])[1][0]
+        left = min(self._states, key=lambda state: state[1][0])[1][0]
+        right = max(self._states, key=lambda state: state[1][0])[1][0]
         w = abs(right - left)
         return self.env.max_width * sigmoid(w)
 
@@ -119,5 +119,5 @@ class Phenotype(object):
             elif c == ']':
                 state = stack.pop()
             else:
-                print 'not supported:', c
+                print('not supported:', c)
 

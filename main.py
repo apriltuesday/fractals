@@ -5,8 +5,8 @@ import subprocess
 
 import numpy as np
 from flask import Flask, jsonify, request
+from flask_cors import cross_origin
 
-from crossdomain import crossdomain
 from genotype import Genotype
 from lsys import lsys
 
@@ -61,10 +61,10 @@ def evolve(env, generations=10):
     scores = sorted(scores, reverse=True)
 
     for i in range(generations):
-        print 'generation', i
-        print 'best score:', scores[0]
-        print 'best rule:', population[0].rules
-        print '============='
+        print('generation', i)
+        print('best score:', scores[0])
+        print('best rule:', population[0].rules)
+        print('=============')
         # save_image(population[0].generate(env), filename='gen_{:02d}'.format(i))
 
         # bottom n get tossed, top n go through unchanged
@@ -87,7 +87,7 @@ def evolve(env, generations=10):
 
 
 @app.route("/plants", methods=["POST", "OPTIONS"])
-@crossdomain(origin="*", headers="Content-Type")
+@cross_origin()
 def plants():
     input = request.get_json()
     gens = input['generations']

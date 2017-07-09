@@ -23,7 +23,7 @@ class Genotype(object):
         return Phenotype(current, env)
 
     def mutate(self):
-        lhs = np.random.choice(self.rules.keys())
+        lhs = np.random.choice(list(self.rules.keys()))
         rule = self.rules[lhs]
         if np.random.rand() < 0.5:
             i = self.random_symbol(rule)

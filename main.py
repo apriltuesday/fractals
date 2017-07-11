@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 import subprocess
 
 import numpy as np
@@ -20,14 +19,14 @@ def softmax(x):
     return e_x / np.sum(e_x)
 
 
-class Environment(object):  # TODO compute params from input here
+class Environment(object):
     def __init__(self, input):
-        # temp: too hot / too cold both bad for growth (what bit?)
+        # TODO temp: too hot / too cold both bad for growth (what bit?)
         self.step = 5 * input['humidity']
         self.angle = 0.396
         self.weights = np.array([
             0,  # 1 / input['nutrients'],  # efficiency
-            1 / input['light'],  # phototropism
+            input['humidity'] / (input['light'] + input['wind']),  # phototropism
             1,  # symmetry
             1 / input['light'],  # light
             input['humidity']   # branching
@@ -35,22 +34,10 @@ class Environment(object):  # TODO compute params from input here
         self.weights /= np.sum(self.weights)
         self.elitism_rate = 0.25
         self.mutation_rate = 0.2  # TODO mutation rate should be per codon
-        self.pop_size = 400
+        self.pop_size = 500
         self.max_height = 300 * input['nutrients'] * input['humidity']
         self.max_width = 500 * input['nutrients'] * input['humidity']
         self.leaf_size = 10 * input['humidity'] / input['light']
-
-
-# ENV = Environment(5.0, 0.396,  # step and angle
-#                   np.array([  # scoring weights
-#                     0.1,
-#                     0.1,
-#                     0.2,
-#                     0.3,
-#                     0.3,
-#                   ]),
-#                   0.25, 0.2, 400,  # pop rates and size
-#                   300.0, 500.0, 10.0)  # size and leaf
 
 
 def get_scores(population, env):
@@ -102,7 +89,11 @@ def plants():
     env = Environment(input)
     app.logger.info(vars(env))
     population = evolve(env, gens)
-    return jsonify({'results': [g.generate(env).code for g in population]})
+    return jsonify({
+        'step': env.step,
+        'angle': env.angle,
+        'results': [g.generate(env).code for g in population]
+    })
 
 
 def save_image(phenotype, filename='tmp'):

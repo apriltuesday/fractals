@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import subprocess
 
 import numpy as np
@@ -11,6 +12,7 @@ from genotype import Genotype
 from lsys import lsys
 
 app = Flask(__name__)
+app.debug = True
 
 
 def softmax(x):
@@ -20,15 +22,23 @@ def softmax(x):
 
 class Environment(object):  # TODO compute params from input here
     def __init__(self, input):
-        self.step = 5.0
+        # temp: too hot / too cold both bad for growth (what bit?)
+        self.step = 5 * input['humidity']
         self.angle = 0.396
-        self.weights = np.array([0.1, 0.1, 0.2, 0.3, 0.3])
+        self.weights = np.array([
+            0,  # 1 / input['nutrients'],  # efficiency
+            1 / input['light'],  # phototropism
+            1,  # symmetry
+            1 / input['light'],  # light
+            input['humidity']   # branching
+        ])
+        self.weights /= np.sum(self.weights)
         self.elitism_rate = 0.25
         self.mutation_rate = 0.2  # TODO mutation rate should be per codon
         self.pop_size = 400
-        self.max_height = 300.0
-        self.max_width = 500.0
-        self.leaf_size = 10.0
+        self.max_height = 300 * input['nutrients'] * input['humidity']
+        self.max_width = 500 * input['nutrients'] * input['humidity']
+        self.leaf_size = 10 * input['humidity'] / input['light']
 
 
 # ENV = Environment(5.0, 0.396,  # step and angle
@@ -61,10 +71,8 @@ def evolve(env, generations=10):
     scores = sorted(scores, reverse=True)
 
     for i in range(generations):
-        print('generation', i)
-        print('best score:', scores[0])
-        print('best rule:', population[0].rules)
-        print('=============')
+        app.logger.info('generation {}\nbest score: {}\nbest rule: {}'.format(
+            i, scores[0], population[0].rules))
         # save_image(population[0].generate(env), filename='gen_{:02d}'.format(i))
 
         # bottom n get tossed, top n go through unchanged
@@ -92,6 +100,7 @@ def plants():
     input = request.get_json()
     gens = input['generations']
     env = Environment(input)
+    app.logger.info(vars(env))
     population = evolve(env, gens)
     return jsonify({'results': [g.generate(env).code for g in population]})
 

@@ -24,29 +24,23 @@
           <label for="gens">Generations</label>
           <input id="gens"><br>
 
-          <label for="light">Light</label>
+          <label for="light">Light intensity</label>
           <div id="light"></div><br>
-
-          <label for="nutrients">Nutrients</label>
-          <div id="nutrients"></div><br>
 
           <label for="temperature">Temperature</label>
           <div id="temperature"></div><br>
 
-          <label for="rainfall">Rainfall</label>
-          <div id="rainfall"></div><br>
+          <label for="humidity">Humidity</label>
+          <div id="humidity"></div><br>
 
-          <label for="wind">Wind</label>
-          <div id="wind"></div><br>
-
-          <label for="altitude">Altitude</label>
-          <div id="altitude"></div><br>
+          <label for="nutrients">Nutrients</label>
+          <div id="nutrients"></div><br>
 
           <input id="submit" type="submit" value="GO">
         </form>
       </div>
       <div class="col-md-8">
-        <svg width="600" height="600" font-family="sans-serif" font-size="10" text-anchor="middle"></svg>
+        <svg width="1000" height="600" font-family="sans-serif" font-size="10" text-anchor="middle"></svg>
       </div>
     </div>
   </div>
@@ -54,19 +48,49 @@
   <script>
 
 // Input form
+
 var generations = $( "#gens" ).spinner({
   min: 1,
   max: 100,
   step: 1
 });
+
 generations.spinner("value", 5);
 var light = $( "#light" ).slider({
 	range: false,
 	min: 0,
 	max: 1,
 	step: 0.01,
+	value: 0.5
+});
+
+generations.spinner("value", 5);
+var temperature = $( "#temperature" ).slider({
+	range: false,
+	min: 0,
+	max: 1,
+	step: 0.01,
 	value: 0.25
 });
+
+generations.spinner("value", 5);
+var humidity = $( "#humidity" ).slider({
+	range: false,
+	min: 0,
+	max: 1,
+	step: 0.01,
+	value: 0.25
+});
+
+generations.spinner("value", 5);
+var nutrients = $( "#nutrients" ).slider({
+	range: false,
+	min: 0,
+	max: 1,
+	step: 0.01,
+	value: 0.5
+});
+
 $( "#submit" ).button();
 
 
@@ -131,14 +155,15 @@ function plant(length, theta) {
 
   var step = 5.0
   var angle = 0.396
-  var width = height = 600
+  var width = 1000
+  var height = 600
   var colors = ["#367132", "#57A71C", "#71C70C", "#ABBE55", "#B1DE75", "50F71E", "#57A515", "#7AB005", "#5ECC05"]
   var url = 'http://localhost:5000/plants'
 
   function callback(data) {
     console.log(data);
-    data['results'].slice(0, 100).forEach(function(p) {
-      var pos = Math.random() * (width - 100) + 100
+    data['results'].slice(0, 10).forEach(function(p) {
+      var pos = Math.random() * (width - 200) + 200
       var col = colors[Math.floor(Math.random() * colors.length)]
       lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(step, angle))
     })
@@ -151,7 +176,10 @@ function plant(length, theta) {
 
     var data = {
       generations: generations.spinner("value"),
-      light: light.slider("value")
+      light: light.slider("value"),
+      temperature: temperature.slider("value"),
+      humidity: humidity.slider("value"),
+      nutrients: nutrients.slider("value")
     }
     console.log(data)
 

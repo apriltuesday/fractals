@@ -176,31 +176,44 @@ function plant(length, theta) {
     return total || Math.abs(val - pos) < 10
   }
 
+  function clearCanvas() {
+    d3.select("svg").selectAll("path").remove()
+  }
+
   function callback(data) {
     console.log(data)
-    var locs = []
-    data['results'].slice(0, 10).forEach(function(p) {
+    for (var j = 0; j < data.length; j++) {
+      setTimeout(drawGen, 3000 * j, data[j])
+    }
 
-      // choose a non-overlapping position
-      var pos
-       do {
-         pos = Math.random() * (width - 150) + 150
-         var reducer = function(total, val) { return posCoveredReducer(total, val, pos) }
-       } while (locs.reduce(reducer, false))
-      locs.push(pos)
+    function drawGen(arr) {
+      clearCanvas()
+      
+      //var locs = []
+      // TODO: render 100 individuals of the top 10 species, proportional to fitness score
+      for (var i = 0; i < 10; i++) {
+        var p = arr['results'][i]
 
-      // choose a color
-      var col = colors[Math.floor(Math.random() * colors.length)]
+        // choose a non-overlapping position
+        var pos = 150 + (width - 300) / 10 * i
+        //do {
+        //  pos = Math.random() * (width - 150) + 150
+        //  var reducer = function(total, val) { return posCoveredReducer(total, val, pos) }
+        //} while (locs.reduce(reducer, false))
+        //locs.push(pos)
 
-      // render
-      lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(data['step'], data['angle']))
-    })
+        // choose a color
+        var col = colors[Math.floor(Math.random() * colors.length)]
+
+        // render
+        lrender({ x:pos, y:(height - 100) }, col, p.split(''), plant(arr['step'], arr['angle']))
+      }
+    }
   }
-    
+
 
   $('.config').on('submit', function () {
-    // clear canvas
-    d3.select("svg").selectAll("path").remove()
+    clearCanvas()
 
     var data = {
       generations: generations.spinner("value"),
@@ -217,15 +230,15 @@ function plant(length, theta) {
     request.open("POST", url, true);
     request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
     request.onreadystatechange = function() {
-        if (request.readyState == XMLHttpRequest.DONE && request.status == 200) {
-            callback(JSON.parse(request.response));
-        }
+      if (request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+        callback(JSON.parse(request.response));
+      }
     };
     request.send(JSON.stringify(data));
 
     return false; //prevent default form submit
   });
 
-</script>
+  </script>
 </body>
 </html>

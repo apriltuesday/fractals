@@ -4,7 +4,7 @@
 import subprocess
 
 import numpy as np
-from flask import Flask, jsonify, request
+from flask import Flask, request, url_for, jsonify, redirect
 from flask_cors import cross_origin
 
 from genotype import Genotype
@@ -78,7 +78,12 @@ def evolve(env, generations=10):
         population = sorted(new_pop, key=lambda g: scores[new_pop.index(g)], reverse=True)
         scores = sorted(scores, reverse=True)
 
-    return population
+        yield {
+            'step': env.step,
+            'angle': env.angle,
+            'results': [g.generate(env).code for g in population],
+            'scores': scores
+        }
 
 
 @app.route("/plants", methods=["POST", "OPTIONS"])
@@ -88,12 +93,14 @@ def plants():
     gens = input['generations']
     env = Environment(input)
     app.logger.info(vars(env))
-    population = evolve(env, gens)
-    return jsonify({
-        'step': env.step,
-        'angle': env.angle,
-        'results': [g.generate(env).code for g in population]
-    })
+    results = [pop for pop in evolve(env, gens)]
+    return jsonify(results)
+
+
+@app.route("/")
+@cross_origin()
+def home():
+    return redirect(url_for('static', filename='index.html'))
 
 
 def save_image(phenotype, filename='tmp'):
